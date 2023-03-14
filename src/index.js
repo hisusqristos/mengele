@@ -1,6 +1,5 @@
-import cors from "cors";
-
 const audioContext = new AudioContext();
+
 const request1 = new XMLHttpRequest();
 const request2 = new XMLHttpRequest();
 
@@ -41,9 +40,11 @@ request1.onload = () => {
   });
 };
 
+request1.send();
+
 const btn = document.createElement("button");
 btn.innerText = "klik";
-btn.addEventListener("click", cors(), () => {
+btn.addEventListener("click", () => {
   request1.send();
 });
 document.body.appendChild(btn); // im having problems with cors, gotta fix that
