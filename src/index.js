@@ -8,10 +8,14 @@ source.connect(audioCtx.destination);
 const source2 = audioCtx.createMediaElementSource(audio2);
 source2.connect(audioCtx.destination);
 
+const playBoth = () => {
+  audio.play();
+  audio2.play();
+};
+
 const btn = document.createElement("button");
 btn.innerText = "klik";
 btn.addEventListener("click", () => {
-  audio.play();
-  audio2.play();
+  playBoth();
 });
 document.body.appendChild(btn);
