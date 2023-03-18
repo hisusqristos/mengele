@@ -42,7 +42,7 @@ function mix(buffers, context) {
 
 const buffers = [buffer1, buffer2]
 
-const source = audioContext.createBufferSource();
+const source = audioCtx.createBufferSource();
 const newBuffer = mix(buffers, audioCtx)
 
 source.buffer = newBuffer;
