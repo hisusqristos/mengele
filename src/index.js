@@ -1,56 +1,56 @@
 const audioCtx = new AudioContext();
-const audio = new Audio("../galasavoner/galasavo.mp3");
-const audio2 = new Audio("../galasavoner/galasavo2.mp3");
+const audio = "../galasavoner/galasavo.mp3";
+const audio2 = "../galasavoner/galasavo2.mp3";
 
-const buffer1 = audioCtx.decodeAudioData(audio)
-const buffer2 = audioCtx.decodeAudioData(audio2)
-
-
-function mix(buffers, context) {
-  var maxChannels = 0;
-  var maxDuration = 0;
-  for (let i = 0; i < buffers.length; i++) {
-    if (buffers[i].numberOfChannels > maxChannels) {
-      maxChannels = buffers[i].numberOfChannels;
-    }
-    if (buffers[i].duration > maxDuration) {
-      maxDuration = buffers[i].duration;
-    }
-  }
-  var out = context.createBuffer(
-    maxChannels,
-    context.sampleRate * maxDuration,
-    context.sampleRate
+const mergeBuffers = (buffer1, buffer2) => {
+  const mergedBuffer = audioCtx.createBuffer(
+    buffer1.numberOfChannels,
+    buffer1.length + buffer2.length,
+    buffer1.sampleRate
   );
 
-  for (var j = 0; j < buffers.length; j++) {
-    for (
-      var srcChannel = 0;
-      srcChannel < buffers[j].numberOfChannels;
-      srcChannel++
-    ) {
-      var output = out.getChanneData(srcChannel);
-      var input = buffers[j].getChanneData(srcChannel);
-      for (let i = 0; i < input.length; i++) {
-        output[i] += input[i];
-      }
-    }
+  for (let channel = 0; channel < buffer1.numberOfChannels; channel++) {
+    const channelData = buffer1.getChannelData(channel);
+    mergedBuffer.getChannelData(channel).set(channelData);
   }
-  return out;
-}
 
+  for (let channel = 0; channel < buffer2.numberOfChannels; channel++) {
+    const channelData = buffer2.getChannelData(channel);
+    mergedBuffer.getChannelData(channel).set(channelData, buffer1.length);
+  }
+  return mergedBuffer;
+};
 
-const buffers = [buffer1, buffer2]
+let buffer1, buffer2;
 
-const source = audioCtx.createBufferSource();
-const newBuffer = mix(buffers, audioCtx)
+fetch(audio)
+  .then((response) => response.arrayBuffer())
+  .then((arrayBuffer) => audioCtx.decodeAudioData(arrayBuffer))
+  .then((decodedBuffer) => {
+    buffer1 = decodedBuffer;
+    return fetch(audio2);
+  })
+  .then((response) => response.arrayBuffer())
+  .then((arrayBuffer) => audioCtx.decodeAudioData(arrayBuffer))
+  .then((decodedBuffer) => {
 
-source.buffer = newBuffer;
-source.connect(audioCtx.destination)
+// too many callbacks, doesnt work.
 
-const btn = document.createElement("button");
-btn.innerText = "klik";
-btn.addEventListener("click", () => {
-  source.start()
-});
-document.body.appendChild(btn);
+    buffer2 = decodedBuffer;
+
+    const mergedBuffer = mergeBuffers(buffer1, buffer2);
+
+    var source = audioCtx.createBufferSource();
+    source.buffer = mergedBuffer;
+    source.connect(audioCtx.destination);
+
+    const btn = document.createElement("button");
+    btn.innerText = "klik";
+    btn.addEventListener("click", () => {
+      source.start();
+    });
+    document.body.appendChild(btn);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
