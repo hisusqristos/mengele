@@ -3,6 +3,8 @@ const audio = "../galasavoner/galasavo.mp3";
 const audio2 = "../galasavoner/galasavo2.mp3";
 
 const mergeBuffers = (buffer1, buffer2) => {
+  console.log(buffer1.length);
+
   const mergedBuffer = audioCtx.createBuffer(
     buffer1.numberOfChannels,
     buffer1.length + buffer2.length,
@@ -21,36 +23,34 @@ const mergeBuffers = (buffer1, buffer2) => {
   return mergedBuffer;
 };
 
-let buffer1, buffer2;
+const returnMerged = async () => {
+  let buffer1, buffer2;
 
-fetch(audio)
-  .then((response) => response.arrayBuffer())
-  .then((arrayBuffer) => audioCtx.decodeAudioData(arrayBuffer))
-  .then((decodedBuffer) => {
-    buffer1 = decodedBuffer;
-    return fetch(audio2);
-  })
-  .then((response) => response.arrayBuffer())
-  .then((arrayBuffer) => audioCtx.decodeAudioData(arrayBuffer))
-  .then((decodedBuffer) => {
-
-// too many callbacks, doesnt work.
-
-    buffer2 = decodedBuffer;
-
-    const mergedBuffer = mergeBuffers(buffer1, buffer2);
-
-    var source = audioCtx.createBufferSource();
-    source.buffer = mergedBuffer;
-    source.connect(audioCtx.destination);
-
-    const btn = document.createElement("button");
-    btn.innerText = "klik";
-    btn.addEventListener("click", () => {
-      source.start();
+  buffer1 = await fetch(audio)
+    .then((response) => response.arrayBuffer())
+    .then((arrayBuffer) => audioCtx.decodeAudioData(arrayBuffer))
+    .catch((error) => {
+      console.error(error);
     });
-    document.body.appendChild(btn);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+
+  buffer2 = await fetch(audio2)
+    .then((response) => response.arrayBuffer())
+    .then((arrayBuffer) => audioCtx.decodeAudioData(arrayBuffer))
+    .catch((error) => {
+      console.error(error);
+    });
+
+  const mergedBuffer = mergeBuffers(buffer1, buffer2);
+  return mergedBuffer;
+};
+
+var source = audioCtx.createBufferSource();
+source.buffer = returnMerged(); // missmatch. bzbz
+source.connect(audioCtx.destination);
+
+const btn = document.createElement("button");
+btn.innerText = "klik";
+btn.addEventListener("click", () => {
+  source.start();
+});
+document.body.appendChild(btn);
